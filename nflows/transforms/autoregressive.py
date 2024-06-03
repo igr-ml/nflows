@@ -72,6 +72,7 @@ class MaskedAffineAutoregressiveTransform(AutoregressiveTransform):
         activation=F.relu,
         dropout_probability=0.0,
         use_batch_norm=False,
+        scale_activation=None,
     ):
         self.features = features
         made = made_module.MADE(
@@ -87,6 +88,12 @@ class MaskedAffineAutoregressiveTransform(AutoregressiveTransform):
             use_batch_norm=use_batch_norm,
         )
         self._epsilon = 1e-3
+
+        if scale_activation is None:
+            self.scale_activation = lambda x: F.softplus(x) + self._epsilon
+        else:
+            self.scale_activation = scale_activation
+
         super(MaskedAffineAutoregressiveTransform, self).__init__(made)
 
     def _output_dim_multiplier(self):
@@ -96,8 +103,7 @@ class MaskedAffineAutoregressiveTransform(AutoregressiveTransform):
         unconstrained_scale, shift = self._unconstrained_scale_and_shift(
             autoregressive_params
         )
-        # scale = torch.sigmoid(unconstrained_scale + 2.0) + self._epsilon
-        scale = F.softplus(unconstrained_scale) + self._epsilon
+        scale = self.scale_activation(unconstrained_scale)
         log_scale = torch.log(scale)
         outputs = scale * inputs + shift
         logabsdet = torchutils.sum_except_batch(log_scale, num_batch_dims=1)
@@ -107,8 +113,7 @@ class MaskedAffineAutoregressiveTransform(AutoregressiveTransform):
         unconstrained_scale, shift = self._unconstrained_scale_and_shift(
             autoregressive_params
         )
-        # scale = torch.sigmoid(unconstrained_scale + 2.0) + self._epsilon
-        scale = F.softplus(unconstrained_scale) + self._epsilon
+        scale = self.scale_activation(unconstrained_scale)
         log_scale = torch.log(scale)
         outputs = (inputs - shift) / scale
         logabsdet = -torchutils.sum_except_batch(log_scale, num_batch_dims=1)
