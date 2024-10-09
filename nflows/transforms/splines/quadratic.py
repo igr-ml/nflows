@@ -42,6 +42,7 @@ def unconstrained_quadratic_spline(
             inputs=inputs,
             outputs=outputs,
             logabsdet=logabsdet,
+            mask=inside_interval_mask,
             unnormalized_widths=unnormalized_widths[inside_interval_mask, :],
             unnormalized_heights=unnormalized_heights[inside_interval_mask, :],
             inverse=inverse,

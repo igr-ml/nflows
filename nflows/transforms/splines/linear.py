@@ -28,6 +28,7 @@ def unconstrained_linear_spline(
             inputs=inputs,
             outputs=outputs,
             logabsdet=logabsdet,
+            mask=inside_interval_mask,
             unnormalized_pdf=unnormalized_pdf[inside_interval_mask, :],
             inverse=inverse,
             left=-tail_bound,
