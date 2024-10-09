@@ -4,6 +4,7 @@ from torch.nn import functional as F
 
 from ...transforms.base import InputOutsideDomain
 from ...utils import torchutils
+from .utils import apply_spline_at_mask
 
 
 def unconstrained_linear_spline(
@@ -22,8 +23,12 @@ def unconstrained_linear_spline(
         raise RuntimeError("{} tails are not implemented.".format(tails))
 
     if torch.any(inside_interval_mask):
-        outputs[inside_interval_mask], logabsdet[inside_interval_mask] = linear_spline(
-            inputs=inputs[inside_interval_mask],
+        outputs, logabsdet = apply_spline_at_mask(
+            linear_spline,
+            inputs=inputs,
+            outputs=outputs,
+            logabsdet=logabsdet,
+            mask=inside_interval_mask,
             unnormalized_pdf=unnormalized_pdf[inside_interval_mask, :],
             inverse=inverse,
             left=-tail_bound,

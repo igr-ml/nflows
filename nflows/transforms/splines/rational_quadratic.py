@@ -4,6 +4,7 @@ from torch.nn import functional as F
 
 from ...transforms.base import InputOutsideDomain
 from ...utils import torchutils
+from .utils import apply_spline_at_mask
 
 DEFAULT_MIN_BIN_WIDTH = 1e-3
 DEFAULT_MIN_BIN_HEIGHT = 1e-3
@@ -40,11 +41,12 @@ def unconstrained_rational_quadratic_spline(
         raise RuntimeError("{} tails are not implemented.".format(tails))
 
     if torch.any(inside_interval_mask):
-        (
-            outputs[inside_interval_mask],
-            logabsdet[inside_interval_mask],
-        ) = rational_quadratic_spline(
-            inputs=inputs[inside_interval_mask],
+        outputs, logabsdet = apply_spline_at_mask(
+            rational_quadratic_spline,
+            inputs=inputs,
+            outputs=outputs,
+            logabsdet=logabsdet,
+            mask=inside_interval_mask,
             unnormalized_widths=unnormalized_widths[inside_interval_mask, :],
             unnormalized_heights=unnormalized_heights[inside_interval_mask, :],
             unnormalized_derivatives=unnormalized_derivatives[inside_interval_mask, :],
@@ -56,8 +58,8 @@ def unconstrained_rational_quadratic_spline(
             min_bin_width=min_bin_width,
             min_bin_height=min_bin_height,
             min_derivative=min_derivative,
-        )
 
+        )
     return outputs, logabsdet
 
 
